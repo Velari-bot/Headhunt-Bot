@@ -221,6 +221,30 @@ Environment variables in `.env`:
 - Check bot role hierarchy (bot role must be above managed roles)
 - Run `/setup` again — it will skip existing items and continue
 
+## Deployment
+
+### Discord Bot (GitHub)
+
+Repository: [github.com/Velari-bot/Headhunt-Bot](https://github.com/Velari-bot/Headhunt-Bot)
+
+Run the bot on any Node.js host (VPS, Railway, Render, etc.):
+
+```bash
+npm install
+npm run deploy   # register slash commands
+npm start
+```
+
+Set environment variables from `.env.example` on your host. Do not commit `.env`.
+
+### Website (Vercel)
+
+The player portal is in `website/` and deploys to Vercel. See [website/README.md](website/README.md#deployment) for full setup.
+
+```
+Discord account ↔ Website account ↔ Minecraft Bedrock player
+```
+
 ## License
 
 MIT

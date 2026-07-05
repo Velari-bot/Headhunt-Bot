@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PlayerStatus {
+  Alive
+  Ghost
+  Eliminated
+}
+
+enum ListingStatus {
+  Active
+  Sold
+  Cancelled
+}
+
+enum BountyStatus {
+  Active
+  Completed
+  Cancelled
+}
+
+enum TeamRole {
+  Owner
+  Member
+}
+
+model User {
+  id              String   @id @default(cuid())
+  discordId       String   @unique
+  discordUsername String
+  discordAvatar   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  minecraftAccount MinecraftAccount?
+  linkCodes        LinkCode[]
+  playerStats      PlayerStats?
+  ownedTeams       Team[]            @relation("TeamOwner")
+  teamMemberships  TeamMember[]
+  marketListings   MarketListing[]
+  bountiesCreated  Bounty[]          @relation("BountyCreator")
+  bountiesTargeted Bounty[]          @relation("BountyTarget")
+}
+
+model MinecraftAccount {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  minecraftName String
+  minecraftXuid String   @unique
+  linkedAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LinkCode {
+  id        String    @id @default(cuid())
+  userId    String
+  code      String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+}
+
+model PlayerStats {
+  id                  String       @id @default(cuid())
+  userId              String       @unique
+  minecraftXuid       String       @unique
+  coins               Int          @default(250)
+  lives               Int          @default(3)
+  maxHearts           Int          @default(10)
+  status              PlayerStatus @default(Alive)
+  teamId              String?
+  ghostBuybacksUsed   Int          @default(0)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team? @relation(fields: [teamId], references: [id], onDelete: SetNull)
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  ownerUserId String
+  createdAt   DateTime @default(now())
+
+  owner   User         @relation("TeamOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  members TeamMember[]
+  players PlayerStats[]
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String
+  role     TeamRole @default(Member)
+  joinedAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+}
+
+model MarketListing {
+  id           String        @id @default(cuid())
+  sellerUserId String
+  itemType     String
+  itemName     String
+  rarity       String?
+  price        Int
+  status       ListingStatus @default(Active)
+  createdAt    DateTime      @default(now())
+
+  seller User @relation(fields: [sellerUserId], references: [id], onDelete: Cascade)
+}
+
+model Bounty {
+  id            String       @id @default(cuid())
+  creatorUserId String
+  targetUserId  String
+  amount        Int
+  status        BountyStatus @default(Active)
+  createdAt     DateTime     @default(now())
+
+  creator User @relation("BountyCreator", fields: [creatorUserId], references: [id], onDelete: Cascade)
+  target  User @relation("BountyTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+}

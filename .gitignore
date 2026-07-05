@@ -1,4 +1,9 @@
 node_modules/
+website/node_modules/
+website/.next/
 .env
+website/.env
 *.log
 .DS_Store
+.vercel
+website/.vercel
