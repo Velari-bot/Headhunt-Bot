@@ -1,18 +1,9 @@
 import NextAuth from "next-auth";
-import Discord from "next-auth/providers/discord";
+import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  trustHost: true,
-  providers: [
-    Discord({
-      clientId: process.env.DISCORD_CLIENT_ID!,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
-    }),
-  ],
-  pages: {
-    signIn: "/",
-  },
+  ...authConfig,
   callbacks: {
     async signIn({ account, profile }) {
       if (account?.provider !== "discord" || !account.providerAccountId) {
