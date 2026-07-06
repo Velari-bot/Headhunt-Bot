@@ -1,7 +1,11 @@
+import { formatServerAddress } from "@/lib/server-address";
+
 export function Footer() {
   const discordInvite = process.env.NEXT_PUBLIC_DISCORD_INVITE_URL;
-  const serverIp = process.env.NEXT_PUBLIC_SERVER_IP;
-  const serverPort = process.env.NEXT_PUBLIC_SERVER_PORT ?? "19132";
+  const serverAddress = formatServerAddress(
+    process.env.NEXT_PUBLIC_SERVER_IP,
+    process.env.NEXT_PUBLIC_SERVER_PORT ?? "19132",
+  );
 
   return (
     <footer className="mt-auto border-t border-hh-border bg-hh-card">
@@ -11,10 +15,9 @@ export function Footer() {
           <p className="text-sm text-hh-gray">Minecraft Bedrock SMP</p>
         </div>
         <div className="flex flex-col items-center gap-2 text-sm text-hh-gray sm:items-end">
-          {serverIp && serverIp !== "NOT CURRENTLY AVAILABLE" && (
+          {serverAddress !== "Not configured" && (
             <p>
-              Server: <span className="text-hh-gold">{serverIp}</span>
-              {serverPort && `:${serverPort}`}
+              Server: <span className="text-hh-gold">{serverAddress}</span>
             </p>
           )}
           {discordInvite && (

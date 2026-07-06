@@ -7,7 +7,10 @@ export async function POST() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "You must be logged in with Discord to generate a link code." },
+      { status: 401 },
+    );
   }
 
   const existingAccount = await prisma.minecraftAccount.findUnique({
@@ -16,7 +19,7 @@ export async function POST() {
 
   if (existingAccount) {
     return NextResponse.json(
-      { error: "Minecraft account already linked" },
+      { error: "Your Discord account already has a linked Minecraft account." },
       { status: 400 },
     );
   }

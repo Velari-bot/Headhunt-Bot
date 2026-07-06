@@ -3,6 +3,7 @@ export type ProfileData = {
   discordAvatar: string | null;
   discordId: string;
   minecraftName: string | null;
+  minecraftXuid: string | null;
   minecraftLinked: boolean;
   memberSince: string;
   stats: {
@@ -23,12 +24,3 @@ export const PLACEHOLDER_STATS = {
   ghostBuybacksUsed: 0,
   team: null as string | null,
 };
-
-export const RECENT_ACTIVITY = [
-  {
-    id: "1",
-    label: "Linked Minecraft account",
-    time: "Recently",
-    icon: "link" as const,
-  },
-];

@@ -7,9 +7,19 @@ type RouteContext = {
 };
 
 export async function GET(request: NextRequest, context: RouteContext) {
+  if (!process.env.MINECRAFT_SERVER_SECRET) {
+    return NextResponse.json(
+      { error: "Server API is not configured (MINECRAFT_SERVER_SECRET missing)" },
+      { status: 503 },
+    );
+  }
+
   const serverSecret = request.headers.get("x-server-secret");
   if (!verifyServerSecret(request, serverSecret ?? undefined)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Invalid or missing server secret" },
+      { status: 401 },
+    );
   }
 
   const { xuid } = await context.params;
@@ -28,7 +38,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
   });
 
   if (!account) {
-    return NextResponse.json({ error: "Player not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Player not found. Link the account first." },
+      { status: 404 },
+    );
   }
 
   const stats = account.user.playerStats;

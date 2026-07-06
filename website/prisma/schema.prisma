@@ -136,3 +136,16 @@ model Bounty {
   creator User @relation("BountyCreator", fields: [creatorUserId], references: [id], onDelete: Cascade)
   target  User @relation("BountyTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
 }
+
+model ServerEvent {
+  id            String   @id @default(cuid())
+  type          String
+  minecraftXuid String?
+  playerName    String?
+  payload       Json?
+  createdAt     DateTime @default(now())
+
+  @@index([type])
+  @@index([minecraftXuid])
+  @@index([createdAt])
+}

@@ -18,6 +18,7 @@ function toProfileData(
     discordAvatar: user.discordAvatar,
     discordId: user.discordId,
     minecraftName: user.minecraftAccount?.minecraftName ?? null,
+    minecraftXuid: user.minecraftAccount?.minecraftXuid ?? null,
     minecraftLinked: !!user.minecraftAccount,
     memberSince: user.createdAt.toLocaleDateString(),
     stats: user.playerStats
@@ -40,6 +41,7 @@ export default async function ProfilePage() {
   return (
     <AppPageRoot
       active="profile"
+      showNav={profile.minecraftLinked}
       mobile={<ProfileApp profile={profile} />}
       desktop={<DesktopProfileContent profile={profile} />}
     />

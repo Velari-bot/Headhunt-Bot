@@ -5,7 +5,7 @@ import { RulesContent } from "./RulesContent";
 
 export function RulesApp() {
   return (
-    <AppShell title="Rules" subtitle="How to survive" navActive="rules">
+    <AppShell title="Rules" subtitle="How to survive" navActive="profile">
       <RulesContent />
     </AppShell>
   );

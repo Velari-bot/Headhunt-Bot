@@ -7,12 +7,12 @@ const { auth } = NextAuth(authConfig);
 const PROTECTED_PREFIXES = [
   "/market",
   "/profile",
+  "/team",
   "/teams",
+  "/sell",
+  "/watchlist",
   "/dashboard",
   "/link",
-  "/rules",
-  "/about",
-  "/bounties",
 ];
 
 export default auth((req) => {

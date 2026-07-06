@@ -1,25 +1,27 @@
 # HeadHunt Survival Website
 
-Account hub for **HeadHunt Survival** — a Minecraft Bedrock survival SMP. This website connects Discord accounts to Minecraft Bedrock players via code-based linking.
+Private player portal for **HeadHunt Survival** — a Minecraft Bedrock survival SMP. Connect Discord, link your Minecraft Bedrock account, and unlock the app shell for market, teams, and more (coming soon).
 
-## Features (MVP)
+## Player flow
 
-- Dark premium survival-themed UI
-- Discord OAuth login
-- Player dashboard with stats
-- Minecraft account linking via temporary codes (`HH-XXXX`)
-- API endpoints for the Minecraft server to verify links and sync player data
-- Preview pages for Market, Teams, and Bounties (coming soon)
+```
+Open website
+→ Connect Discord
+→ Redirect to Profile
+→ Generate Minecraft link code
+→ Type ?link CODE in Minecraft
+→ Website shows Minecraft Connected
+→ App unlocks basic navigation
+```
 
-## Tech Stack
+## Tech stack
 
 - **Next.js 16** (App Router)
-- **TypeScript**
-- **Tailwind CSS**
+- **TypeScript** + **Tailwind CSS**
 - **Prisma** + **PostgreSQL**
-- **Auth.js** (NextAuth v5) with Discord provider
+- **Auth.js** (NextAuth v5) with Discord OAuth
 
-## Quick Start
+## Setup
 
 ### 1. Install dependencies
 
@@ -28,43 +30,60 @@ cd website
 npm install
 ```
 
-### 2. Set up environment
+### 2. Configure environment
 
 ```bash
 cp .env.example .env
 ```
 
-Fill in all values in `.env`. Generate `AUTH_SECRET`:
+Fill in every value in `.env`:
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string (Neon, Supabase, Railway, or local) |
+| `AUTH_SECRET` | Auth.js session secret — generate with `openssl rand -base64 32` |
+| `AUTH_DISCORD_ID` | Discord OAuth **Client ID** from the Developer Portal |
+| `AUTH_DISCORD_SECRET` | Discord OAuth **Client Secret** |
+| `MINECRAFT_SERVER_SECRET` | Shared secret for server-only API routes — must match `bds/behavior_packs/.../config.js` |
+| `NEXT_PUBLIC_SERVER_IP` | Bedrock server IP shown on the profile setup card |
+| `NEXT_PUBLIC_SERVER_PORT` | Bedrock server port (default `19132`) |
+| `NEXT_PUBLIC_DISCORD_INVITE_URL` | Discord invite link for the community server |
+| `NEXT_PUBLIC_DISCORD_GUILD_ID` | Discord guild ID (used by bot integrations) |
+
+Optional aliases: `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` work in place of `AUTH_DISCORD_*`.
+
+For local dev, set `AUTH_URL=http://localhost:3000`. In production, set `AUTH_URL` to your deployed URL.
+
+Generate `AUTH_SECRET`:
 
 ```bash
 openssl rand -base64 32
 ```
 
-### 3. Configure Discord OAuth
+### 3. Discord OAuth redirect URL
 
 In the [Discord Developer Portal](https://discord.com/developers/applications):
 
-1. Select your application (can use the same app as the Discord bot)
-2. Go to **OAuth2** → add redirect URL:
+1. Open your application (same app as the Discord bot is fine)
+2. Go to **OAuth2** → **Redirects**
+3. Add:
    ```
    http://localhost:3000/api/auth/callback/discord
    ```
-3. For production, also add:
+4. For production, also add:
    ```
-   https://yourdomain.com/api/auth/callback/discord
+   https://www.headhuntersmc.online/api/auth/callback/discord
    ```
-4. Copy **Client ID** and **Client Secret** to `.env`
+5. Copy **Client ID** and **Client Secret** into `.env` as `AUTH_DISCORD_ID` and `AUTH_DISCORD_SECRET`
 
-### 4. Set up the database
-
-Use [Neon](https://neon.tech), [Supabase](https://supabase.com), [Railway](https://railway.app), or local PostgreSQL.
+### 4. Run Prisma migration
 
 ```bash
-npx prisma migrate dev --name init
+npx prisma migrate dev
 npx prisma generate
 ```
 
-### 5. Run the dev server
+### 5. Start the dev server
 
 ```bash
 npm run dev
@@ -72,147 +91,123 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Testing the link flow
+
+### Generate a link code
+
+1. Connect Discord on the website
+2. Go to **Profile**
+3. Click **Generate Link Code** — you'll get a code like `HH-4829` (expires in 10 minutes, single use)
+
+### Test `/api/link/verify` with curl
+
+```bash
+curl -X POST http://localhost:3000/api/link/verify \
+  -H "Content-Type: application/json" \
+  -H "x-server-secret: YOUR_MINECRAFT_SERVER_SECRET" \
+  -d '{
+    "linkCode": "HH-4829",
+    "minecraftName": "TestPlayer",
+    "minecraftXuid": "12345678901234567"
+  }'
+```
+
+Expected success response:
+
+```json
+{
+  "success": true,
+  "message": "Linked to Discord account YourDiscordName",
+  "discordUsername": "YourDiscordName"
+}
+```
+
+### Test with the Bedrock server
+
+1. Copy `MINECRAFT_SERVER_SECRET` into `bds/behavior_packs/HeaDHunters_Combined_BP/scripts/headhunt/config.js`
+2. Set the portal URL in the behavior pack config
+3. Start the BDS world with the behavior pack enabled
+4. Generate a code on the website, join the server, and type `?link HH-XXXX` in chat
+5. Refresh your profile — Minecraft should show as connected and navigation unlocks
+
+See [`../bds/README.md`](../bds/README.md) for BDS setup details.
+
 ## Pages
 
-| Route | Description |
-|---|---|
-| `/` | Home page |
-| `/about` | Server overview |
-| `/rules` | Basic rules |
-| `/market` | Market preview (mock listings) |
-| `/teams` | Teams preview |
-| `/bounties` | Bounties preview |
-| `/login` | Discord login |
-| `/dashboard` | Player dashboard (protected) |
-| `/link` | Generate Minecraft link code (protected) |
-| `/profile` | Connected account info (protected) |
+| Route | Access | Description |
+|---|---|---|
+| `/` | Public | Discord auth gate (redirects to `/profile` if logged in) |
+| `/profile` | Discord login required | Account setup, link code, stats |
+| `/market` | Minecraft linked | Coming soon placeholder |
+| `/team` | Minecraft linked | Coming soon placeholder |
+| `/sell` | Minecraft linked | Coming soon placeholder |
+| `/watchlist` | Minecraft linked | Coming soon placeholder |
 
-## API Endpoints
-
-### `GET /api/me`
-
-Returns the logged-in user with Minecraft account and stats. Requires Discord session.
+## API endpoints
 
 ### `POST /api/link/create`
 
-Creates a temporary link code (expires in 10 minutes). Requires Discord session.
+Requires Discord session. Creates a temporary link code (10-minute expiry, single use).
 
 ### `POST /api/link/verify`
 
-Called by the Minecraft server when a player runs `/link HH-XXXX`.
+Server-only. Called by the Bedrock behavior pack when a player runs `?link HH-XXXX`.
 
 ```json
 {
   "linkCode": "HH-4829",
   "minecraftName": "WrenchTheTank",
-  "minecraftXuid": "123456789",
-  "serverSecret": "your_minectaft_server_secret"
+  "minecraftXuid": "12345678901234567"
 }
 ```
+
+Send `x-server-secret` header or include `serverSecret` in the body.
+
+Creates a `ServerEvent` with `type: ACCOUNT_LINKED` on success.
 
 ### `GET /api/player/:xuid`
 
-Server-only. Returns player stats. Send header `x-server-secret` or include `serverSecret`.
+Server-only. Returns linked player stats.
 
 ### `POST /api/player/update`
 
-Server-only. Updates player stats (coins, lives, maxHearts, status, team, ghostBuybacksUsed).
+Server-only. Updates player stats from the Minecraft server. Cannot be called from the browser without the server secret.
 
-```json
-{
-  "minecraftXuid": "123456789",
-  "serverSecret": "your_secret",
-  "coins": 500,
-  "lives": 2,
-  "maxHearts": 11,
-  "status": "Alive"
-}
-```
+### `GET /api/me`
 
-## Account Linking Flow
+Requires Discord session. Returns the logged-in user with Minecraft account and stats.
 
-```
-1. User logs in with Discord on the website
-2. User visits /link and generates code (e.g. HH-4829)
-3. User joins Minecraft server and types: /link HH-4829
-4. Server plugin sends code + player name + XUID to POST /api/link/verify
-5. Website links accounts and creates default player stats
-6. Dashboard shows linked profile
-```
+## Common errors
 
-## Minecraft Server Integration
-
-Your Bedrock server plugin/script needs to:
-
-1. Register a `/link <code>` command
-2. Get the player's gamertag and XUID
-3. POST to `https://yourwebsite.com/api/link/verify`
-4. Periodically sync stats via `GET /api/player/:xuid` and `POST /api/player/update`
-
-Always send `MINECRAFT_SERVER_SECRET` in requests.
-
-## Deployment
-
-### GitHub
-
-The repo is hosted at [github.com/Velari-bot/Headhunt-Bot](https://github.com/Velari-bot/Headhunt-Bot). The Discord bot lives at the repo root; the website lives in `website/`.
-
-```bash
-git add .
-git commit -m "Add website and deployment config"
-git push origin main
-```
-
-### Vercel
-
-1. Import the GitHub repo in [Vercel](https://vercel.com/new)
-2. Set **Root Directory** to `website`
-3. Add environment variables (see `.env.example`)
-4. Deploy
-
-Or deploy from CLI:
-
-```bash
-cd website
-vercel link
-vercel env pull   # or add vars manually in Vercel dashboard
-vercel --prod
-```
-
-**Required environment variables:**
-
-| Variable | Notes |
+| Error | Fix |
 |---|---|
-| `DATABASE_URL` | Neon Postgres connection string |
-| `DISCORD_CLIENT_ID` | Same Discord application as the bot |
-| `DISCORD_CLIENT_SECRET` | OAuth client secret |
-| `AUTH_SECRET` | `openssl rand -base64 32` |
-| `AUTH_URL` | Production URL, e.g. `https://your-app.vercel.app` |
-| `MINECRAFT_SERVER_SECRET` | Shared secret for Minecraft API |
-| `NEXT_PUBLIC_*` | Public config vars |
+| Discord OAuth callback mismatch | Add exact redirect URL in Discord Developer Portal → OAuth2 → Redirects |
+| `Missing DATABASE_URL` | Set `DATABASE_URL` in `.env` and restart the dev server |
+| Prisma migration not run | Run `npx prisma migrate dev` then `npx prisma generate` |
+| Wrong server secret / `401 Unauthorized` | Ensure `MINECRAFT_SERVER_SECRET` matches in `.env` and behavior pack `config.js` |
+| BDS cannot reach portal URL | Use a public HTTPS URL (ngrok or deployed Vercel URL) — localhost is not reachable from a remote BDS |
+| Link code expired | Codes expire after 10 minutes — generate a new one on Profile |
+| Link code already used | Each code works once — generate a new one |
+| Minecraft already linked to another Discord | Each XUID can only link to one Discord account |
 
-**After first deploy:**
+## Deployment (Vercel)
 
-1. Set `AUTH_URL` to your Vercel production URL
-2. In Discord Developer Portal → OAuth2, add redirect:
-   ```
-   https://your-app.vercel.app/api/auth/callback/discord
-   ```
-3. Redeploy if needed
+1. Import the repo, set **Root Directory** to `website`
+2. Add all environment variables from `.env.example`
+3. Set `AUTH_URL` to your production URL
+4. Add production Discord OAuth redirect URL
+5. Deploy — migrations run via `prisma migrate deploy` during build
 
-Migrations run automatically during build (`prisma migrate deploy`).
-
-## Project Structure
+## Project structure
 
 ```
 website/
-├── prisma/schema.prisma
+├── prisma/schema.prisma      # User, LinkCode, MinecraftAccount, PlayerStats, ServerEvent
 ├── src/
-│   ├── app/              # Pages and API routes
-│   ├── auth.ts           # Auth.js config
-│   ├── components/       # UI components
-│   ├── lib/              # Utilities
-│   └── generated/prisma/ # Prisma client
+│   ├── app/                  # Pages and API routes
+│   ├── auth.ts               # Auth.js config
+│   ├── components/           # UI components
+│   └── lib/                  # Utilities
 └── .env.example
 ```
 

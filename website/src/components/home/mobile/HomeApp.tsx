@@ -24,7 +24,7 @@ export function HomeApp() {
         <Leaderboard />
       </div>
 
-      <MobileBottomNav active="home" />
+      <MobileBottomNav active="profile" />
     </div>
   );
 }

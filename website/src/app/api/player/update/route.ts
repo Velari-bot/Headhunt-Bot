@@ -14,6 +14,8 @@ type UpdateBody = {
   ghostBuybacksUsed?: number;
 };
 
+const VALID_STATUSES: PlayerStatus[] = ["Alive", "Ghost", "Eliminated"];
+
 export async function POST(request: NextRequest) {
   let body: UpdateBody;
 
@@ -23,14 +25,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
+  if (!process.env.MINECRAFT_SERVER_SECRET) {
+    return NextResponse.json(
+      { error: "Server API is not configured (MINECRAFT_SERVER_SECRET missing)" },
+      { status: 503 },
+    );
+  }
+
   if (!verifyServerSecret(request, body.serverSecret)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Invalid or missing server secret" },
+      { status: 401 },
+    );
   }
 
   const { minecraftXuid } = body;
 
   if (!minecraftXuid) {
-    return NextResponse.json({ error: "minecraftXuid is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "minecraftXuid is required" },
+      { status: 400 },
+    );
+  }
+
+  if (body.status !== undefined && !VALID_STATUSES.includes(body.status)) {
+    return NextResponse.json(
+      { error: "status must be Alive, Ghost, or Eliminated" },
+      { status: 400 },
+    );
   }
 
   const account = await prisma.minecraftAccount.findUnique({
@@ -39,7 +61,10 @@ export async function POST(request: NextRequest) {
   });
 
   if (!account) {
-    return NextResponse.json({ error: "Player not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Player not found. Link the account first." },
+      { status: 404 },
+    );
   }
 
   let teamId: string | null | undefined = undefined;

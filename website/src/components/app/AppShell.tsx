@@ -18,7 +18,7 @@ export function AppShell({
   subtitle,
   children,
   action,
-  navActive = "home",
+  navActive = "profile",
 }: AppShellProps) {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-hh-bg">

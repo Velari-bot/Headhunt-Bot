@@ -10,6 +10,7 @@ type ResponsiveAppPageProps = {
   mobile: ReactNode;
   desktop: ReactNode;
   desktopFullWidth?: boolean;
+  showNav?: boolean;
 };
 
 export function ResponsiveAppPage({
@@ -17,6 +18,7 @@ export function ResponsiveAppPage({
   mobile,
   desktop,
   desktopFullWidth = false,
+  showNav = true,
 }: ResponsiveAppPageProps) {
   return (
     <>
@@ -27,7 +29,7 @@ export function ResponsiveAppPage({
       </div>
 
       <div className="hidden h-full lg:flex">
-        <DesktopSidebarNav active={active} />
+        <DesktopSidebarNav active={active} visible={showNav} />
         <main
           className={`relative flex min-w-0 flex-1 flex-col overflow-hidden bg-hh-bg ${
             desktopFullWidth ? "" : ""

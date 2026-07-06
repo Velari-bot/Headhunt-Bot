@@ -1,40 +1,49 @@
 # HeadHunt Survival Discord Bot
 
-Discord bot for **HeadHunt Survival** — a custom Minecraft Bedrock survival SMP with limited lives, player heads, bounties, teams, and a player-driven market.
+Discord bot for **HeadHunt Survival** — sets up the server layout, posts info embeds, and prepares for syncing events from the web portal.
 
-This bot automatically sets up your Discord server with categories, channels, roles, permissions, and polished info embeds using a single `/setup` command.
+The website handles Discord login and Minecraft linking. This bot does **not** link accounts directly.
 
 ## Features
 
-- **`/setup`** — Creates the full server structure (roles, categories, channels, permissions, embeds)
-- **`/resetserverlayout`** — Admin-only reset and rebuild of the server layout
-- **`/postrules`**, **`/posteconomy`**, **`/postmarket`**, **`/postlives`**, **`/postteams`**, **`/postbounties`**, **`/postfaq`** — Re-post individual embeds
+- **`/setup`** — Creates roles, categories, channels, and permissions (skips existing items)
+- **`/postbasics`** — Posts SERVER BASICS embeds
+- **`/postrules`** — Posts full rules and FAQ
+- **`/postlinking`** — Posts welcome, account linking, and join guides
+- **`/posteconomy`** — Posts economy, price guide, and ghost buyback info
+- **`/postteams`** — Posts team info
+- **`/postbounties`** — Posts bounty board placeholder
+- **`/status`** — Bot uptime and portal sync status
+
+Portal event polling foundation (`src/services/portalClient.ts`, `src/services/eventPoller.ts`) is ready for when `/api/bot/events` is built on the website.
 
 ## Requirements
 
-- [Node.js](https://nodejs.org/) 18 or higher
-- A Discord bot application ([Discord Developer Portal](https://discord.com/developers/applications))
-- Administrator access on your Discord server
+- Node.js 18+
+- Discord bot application ([Developer Portal](https://discord.com/developers/applications))
+- Administrator permission on your Discord server
 
-## Quick Start
+## Setup
 
-### 1. Create a Discord Bot
+### 1. Create a Discord bot application
 
 1. Go to the [Discord Developer Portal](https://discord.com/developers/applications)
-2. Click **New Application** and name it (e.g. `HeadHunt Survival`)
-3. Go to **Bot** → **Reset Token** → copy your token
-4. Under **Privileged Gateway Intents**, you do not need any special intents for this bot
-5. Copy your **Application ID** from the General Information page
+2. Click **New Application** (e.g. `HeadHunt Survival`)
+3. Open **Bot** → **Reset Token** → copy the token
+4. Copy the **Application ID** from **General Information**
 
-### 2. Invite the Bot
+No privileged intents are required for this bot.
 
-Use this invite URL (replace `YOUR_CLIENT_ID` with your Application ID):
+### 2. Invite the bot with correct permissions
+
+Replace `YOUR_CLIENT_ID` with your Application ID:
 
 ```
 https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=268521464&scope=bot%20applications.commands
 ```
 
 Required permissions:
+
 - Manage Channels
 - Manage Roles
 - Send Messages
@@ -42,204 +51,169 @@ Required permissions:
 - Read Message History
 - View Channels
 
-Or use permission integer: `268521464`
+Permission integer: `268521464`
 
-### 3. Install Dependencies
-
-```bash
-npm install
-```
-
-### 4. Configure Environment
-
-Copy the example env file and fill in your values:
+### 3. Configure environment
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env`:
+| Variable | Description |
+|---|---|
+| `DISCORD_TOKEN` | Bot token from Developer Portal → Bot |
+| `DISCORD_CLIENT_ID` | Application ID |
+| `DISCORD_GUILD_ID` | Your Discord server ID (right-click server → Copy Server ID) |
+| `HEADHUNT_PORTAL_URL` | Web portal URL (e.g. `https://www.headhuntersmc.online`) |
+| `HEADHUNT_BOT_SECRET` | Shared secret for future `/api/bot/events` sync |
 
-```env
-DISCORD_TOKEN=your_bot_token_here
-GUILD_ID=your_guild_id_here
-CLIENT_ID=1523433446586847262
-SERVER_IP=your.server.ip.here
-SERVER_PORT=19132
+### 4. Install dependencies
+
+```bash
+npm install
 ```
 
-**Finding your Guild ID:** Enable Developer Mode in Discord (Settings → Advanced → Developer Mode), then right-click your server icon → **Copy Server ID**.
-
-### 5. Register Slash Commands
+### 5. Deploy slash commands
 
 ```bash
 npm run deploy
 ```
 
-Guild commands register instantly when `GUILD_ID` is set.
+Guild commands register instantly when `DISCORD_GUILD_ID` is set.
 
-### 6. Start the Bot
+### 6. Start the bot
+
+Development (TypeScript directly):
 
 ```bash
+npm run dev
+```
+
+Production:
+
+```bash
+npm run build
 npm start
 ```
 
-### 7. Run Setup
+### 7. Run `/setup`
 
-In your Discord server, run:
+In your Discord server (Administrator required):
 
 ```
 /setup
 ```
 
-You must have **Administrator** permission. The bot will create all roles, categories, channels, permissions, and post info embeds automatically.
+Creates categories, channels, roles, and permissions. Existing items are skipped.
 
-## Server Structure Created
+### 8. Post info embeds
+
+Run these after setup:
+
+```
+/postlinking
+/postbasics
+/postrules
+/posteconomy
+/postteams
+/postbounties
+```
+
+## Server layout
 
 | Category | Channels |
 |---|---|
-| **PRE-SERVER** | server-preview, community-chat, launch-updates |
-| **START HERE** | welcome, announcements, server-info, rules, how-to-join, faq |
-| **HEADHUNT SYSTEM** | lives-system, head-rarities, hearts-system, death-rules, eliminated-players |
-| **ECONOMY** | economy-info, market-info, player-market, price-guide, coin-guide, trade-logs |
-| **BOUNTIES** | bounty-board, place-bounties, bounty-rules, completed-bounties |
-| **TEAMS** | team-info, create-a-team, team-recruitment, team-list, team-wars |
-| **SURVIVAL** | survival-chat, base-showcase, coords-and-travel, questions, suggestions |
-| **SUPPORT** | create-ticket, report-player, appeal-elimination, bug-reports |
+| **START HERE** | welcome, announcements, how-to-join, console-join-guide, link-your-account |
+| **SERVER BASICS** | what-is-headhunt, quick-rules, lives-heads-hearts, market-teams-bounties, how-to-start |
+| **SERVER INFO** | full-rules, economy-info, price-guide, ghost-buyback, faq |
+| **MARKET** | market-updates, trade-chat, price-checks |
+| **TEAMS** | team-info, team-recruitment, team-list |
+| **BOUNTIES** | bounty-board, completed-bounties |
+| **SUPPORT** | create-ticket, report-player, appeal-death, bug-reports |
+| **COMMUNITY** | general, survival-chat, base-showcase, suggestions |
 | **VOICE** | General VC, Team VC 1–3, Staff VC |
-| **STAFF ONLY** | staff-chat, staff-logs, punishment-logs, market-admin, bot-commands |
+| **STAFF ONLY** | staff-chat, staff-logs, bot-commands, death-logs, link-logs, economy-logs |
 
-## Roles Created
+## Roles
 
-Owner, Admin, Moderator, Developer, HeadHunt Staff, Unverified, Player, Team Leader, Outlaw, Bounty Hunter, Eliminated, Verified
+Owner, Admin, Moderator, Developer, HeadHunt Staff, Player, Linked, Team Leader, Outlaw, Bounty Hunter, Ghost, Eliminated
 
-## Join Role System
+- **Linked** — Discord + Minecraft linked (manual for now; website sync later)
+- **Ghost** — Lost all lives, may buy back
+- **Eliminated** — Fully dead state
+- **Ghost/Eliminated** — Can read market channels but cannot type in trade channels
 
-When someone joins the server they automatically receive your configured **join role** (`JOIN_ROLE_ID`). By default this is the pre-server role that can see:
+## Portal sync (future)
 
-- **PRE-SERVER** — preview info, community chat, launch updates
-- **Info guides** — rules, lives, economy, FAQ, and other bot embed channels
-
-They chat in **#community-chat** while the Minecraft server is in pre-launch.
-
-After clicking **Accept Rules & Get Access** in `#community-chat`, they receive **Player** and **Verified** and unlock the full Discord.
-
-**Important:** Enable **Server Members Intent** in the [Discord Developer Portal](https://discord.com/developers/applications) → Bot → Privileged Gateway Intents.
-
-Set your join role ID in `.env`:
-
-```env
-JOIN_ROLE_ID=1523436417148260512
-```
-
-To apply permissions on an existing server without resetting layout:
+`src/services/portalClient.ts` will poll:
 
 ```
-/syncpermissions
+GET /api/bot/events
 ```
 
-## Configuration
+Supported event types (prepared, not live yet):
 
-Edit `src/config.js` to customize:
+- `ACCOUNT_LINKED`
+- `PLAYER_DIED`
+- `PLAYER_GHOSTED`
+- `HEAD_DROPPED`
+- `BOUNTY_PLACED`
+- `BOUNTY_CLAIMED`
+- `MARKET_SALE`
+- `TEAM_CREATED`
 
-- Brand colors
-- Economy prices (hearts, heads, bounties, team cost, market tax)
-- Role definitions
-- Category and channel layout
-- Channel permission types
+The poller starts automatically when `HEADHUNT_PORTAL_URL` and `HEADHUNT_BOT_SECRET` are set. It no-ops gracefully until the website route exists.
 
-Environment variables in `.env`:
-
-| Variable | Description |
-|---|---|
-| `DISCORD_TOKEN` | Bot token (required) |
-| `GUILD_ID` | Your Discord server ID (recommended) |
-| `CLIENT_ID` | Application ID (required for deploy) |
-| `SERVER_IP` | Minecraft Bedrock server IP |
-| `SERVER_PORT` | Minecraft Bedrock server port |
-
-## Commands Reference
-
-| Command | Permission | Description |
-|---|---|---|
-| `/setup` | Administrator | Full server setup |
-| `/resetserverlayout` | Administrator | Delete and recreate layout |
-| `/postrules` | Manage Server | Post rules embed |
-| `/posteconomy` | Manage Server | Post economy embed |
-| `/postmarket` | Manage Server | Post market embed |
-| `/postlives` | Manage Server | Post lives, rarities, and hearts embeds |
-| `/postteams` | Manage Server | Post teams embed |
-| `/postbounties` | Manage Server | Post bounty rules embed |
-| `/postfaq` | Manage Server | Post FAQ embed |
-| `/syncpermissions` | Administrator | Apply Unverified join role channel locks |
-| `/updateinfo` | Manage Server | Replace all info embeds with latest versions |
-
-## Project Structure
+## Project structure
 
 ```
 ├── .env.example
 ├── package.json
-├── README.md
+├── tsconfig.json
 └── src/
-    ├── index.js              # Bot entry point
-    ├── deploy-commands.js    # Slash command registration
-    ├── config.js             # Colors, prices, roles, channels
-    ├── commands/
-    │   ├── setup.js
-    │   ├── resetserverlayout.js
-    │   ├── postrules.js
-    │   ├── posteconomy.js
-    │   ├── postmarket.js
-    │   ├── postlives.js
-    │   ├── postteams.js
-    │   ├── postbounties.js
-    │   └── postfaq.js
-    └── utils/
-        ├── embeds.js         # Reusable embed builders
-        └── serverSetup.js    # Role/channel/permission helpers
+    ├── index.ts
+    ├── deploy-commands.ts
+    ├── config/          # Roles, channels, colors, prices, env
+    ├── commands/        # Slash commands
+    ├── services/        # Portal client + event poller
+    ├── types/
+    └── utils/           # Embeds, permissions, server setup
 ```
 
-## Notes
+## Commands reference
 
-- **Duplicate prevention:** `/setup` skips channels and roles that already exist
-- **Embed deduplication:** Embeds are not re-posted if the bot already posted one in that channel (use individual `/post*` commands to force re-post)
-- **Reset:** `/resetserverlayout` deletes all HeadHunt categories/channels and rebuilds from scratch
-- **Eliminated role:** Players with this role cannot type in player-market, place-bounties, create-a-team, or team-wars
-- **Staff category:** Only visible to Owner, Admin, Moderator, Developer, and HeadHunt Staff
+| Command | Permission | Description |
+|---|---|---|
+| `/setup` | Administrator | Create server structure |
+| `/postbasics` | Administrator | Post SERVER BASICS embeds |
+| `/postrules` | Administrator | Post full rules + FAQ |
+| `/postlinking` | Administrator | Post welcome + linking guides |
+| `/posteconomy` | Administrator | Post economy embeds |
+| `/postteams` | Administrator | Post team info |
+| `/postbounties` | Administrator | Post bounty board |
+| `/status` | Everyone | Bot and portal status |
 
 ## Troubleshooting
 
-**Commands not showing up**
+**Commands not showing**
+
 - Run `npm run deploy` again
-- Confirm `GUILD_ID` and `CLIENT_ID` are correct in `.env`
+- Confirm `DISCORD_CLIENT_ID` and `DISCORD_GUILD_ID` in `.env`
 
-**Missing Access / Permission errors**
-- Re-invite the bot with the correct permissions
-- Ensure the bot's role is above the roles it needs to manage
+**Setup permission errors**
 
-**Setup fails partway through**
-- Check bot role hierarchy (bot role must be above managed roles)
-- Run `/setup` again — it will skip existing items and continue
+- Re-invite the bot with Manage Channels + Manage Roles
+- Move the bot role above roles it manages
 
-## Deployment
+**Portal sync not working**
 
-### Discord Bot (GitHub)
+- Expected until `/api/bot/events` is implemented on the website
+- Check `/status` for portal reachability
 
-Repository: [github.com/Velari-bot/Headhunt-Bot](https://github.com/Velari-bot/Headhunt-Bot)
+## Related
 
-Run the bot on any Node.js host (VPS, Railway, Render, etc.):
-
-```bash
-npm install
-npm run deploy   # register slash commands
-npm start
-```
-
-Set environment variables from `.env.example` on your host. Do not commit `.env`.
-
-### Website (Vercel)
-
-The player portal is in `website/` and deploys to Vercel. See [website/README.md](website/README.md#deployment) for full setup.
+- Website portal: [`website/README.md`](website/README.md)
+- Bedrock server: [`bds/README.md`](bds/README.md)
 
 ```
 Discord account ↔ Website account ↔ Minecraft Bedrock player

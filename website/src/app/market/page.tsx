@@ -1,11 +1,11 @@
 import { AppPageRoot } from "@/lib/immersive-page";
 import { requireMinecraftLinked } from "@/lib/auth-routing";
-import { MarketApp } from "@/components/market/mobile/MarketApp";
-import { DesktopMarketApp } from "@/components/market/desktop/DesktopMarketApp";
+import { ComingSoonApp } from "@/components/app/ComingSoonApp";
+import { ComingSoonDesktop } from "@/components/app/ComingSoonDesktop";
 
 export const metadata = {
   title: "Market",
-  description: "HeadHunt Survival player market — buy, sell, trade.",
+  description: "HeadHunt Survival player market — coming soon.",
 };
 
 export default async function MarketPage() {
@@ -14,9 +14,16 @@ export default async function MarketPage() {
   return (
     <AppPageRoot
       active="market"
-      mobile={<MarketApp />}
-      desktop={<DesktopMarketApp />}
-      desktopFullWidth
+      mobile={
+        <ComingSoonApp
+          title="Market"
+          subtitle="Player marketplace"
+          active="market"
+        />
+      }
+      desktop={
+        <ComingSoonDesktop title="Market" subtitle="Player marketplace" />
+      }
     />
   );
 }

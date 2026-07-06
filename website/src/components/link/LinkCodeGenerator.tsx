@@ -78,7 +78,7 @@ export function LinkCodeGenerator({ isLinked }: LinkCodeGeneratorProps) {
             <li>
               Type{" "}
               <code className="rounded bg-hh-bg px-2 py-0.5 font-mono text-hh-gold">
-                /link {code}
+                ?link {code}
               </code>{" "}
               in chat
             </li>

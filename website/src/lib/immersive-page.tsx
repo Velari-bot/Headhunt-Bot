@@ -14,6 +14,7 @@ type AppPageRootProps = {
   mobile: ReactNode;
   desktop: ReactNode;
   desktopFullWidth?: boolean;
+  showNav?: boolean;
 };
 
 export function AppPageRoot({
@@ -21,6 +22,7 @@ export function AppPageRoot({
   mobile,
   desktop,
   desktopFullWidth,
+  showNav = true,
 }: AppPageRootProps) {
   return (
     <div className={`${orbitron.variable} h-[100dvh] font-market`}>
@@ -29,6 +31,7 @@ export function AppPageRoot({
         mobile={mobile}
         desktop={desktop}
         desktopFullWidth={desktopFullWidth}
+        showNav={showNav}
       />
     </div>
   );

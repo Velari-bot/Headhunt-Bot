@@ -83,7 +83,7 @@ export function MinecraftLinkInline() {
         <li>
           Type{" "}
           <code className="rounded bg-hh-panel px-1.5 py-0.5 font-mono text-hh-gold">
-            /link {code}
+            ?link {code}
           </code>{" "}
           in chat
         </li>

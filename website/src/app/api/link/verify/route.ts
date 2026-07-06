@@ -19,35 +19,59 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  if (!verifyServerSecret(request, body.serverSecret)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!process.env.MINECRAFT_SERVER_SECRET) {
+    return NextResponse.json(
+      { error: "Server API is not configured (MINECRAFT_SERVER_SECRET missing)" },
+      { status: 503 },
+    );
   }
 
-  const code = body.linkCode ?? body.code;
+  if (!verifyServerSecret(request, body.serverSecret)) {
+    return NextResponse.json(
+      { error: "Invalid or missing server secret" },
+      { status: 401 },
+    );
+  }
+
+  const rawCode = body.linkCode ?? body.code;
   const { minecraftName, minecraftXuid } = body;
 
-  if (!code || !minecraftName || !minecraftXuid) {
+  if (!rawCode || !minecraftName || !minecraftXuid) {
     return NextResponse.json(
-      { error: "Missing required fields: code, minecraftName, minecraftXuid" },
+      {
+        error:
+          "Missing required fields: linkCode (or code), minecraftName, minecraftXuid",
+      },
       { status: 400 },
     );
   }
 
+  const code = rawCode.trim().toUpperCase();
+
   const linkCode = await prisma.linkCode.findUnique({
-    where: { code: code.toUpperCase() },
+    where: { code },
     include: { user: true },
   });
 
   if (!linkCode) {
-    return NextResponse.json({ error: "Invalid link code" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Invalid link code. Generate a new code on the website." },
+      { status: 404 },
+    );
   }
 
   if (linkCode.usedAt) {
-    return NextResponse.json({ error: "Link code already used" }, { status: 400 });
+    return NextResponse.json(
+      { error: "This link code has already been used. Generate a new code." },
+      { status: 400 },
+    );
   }
 
   if (linkCode.expiresAt < new Date()) {
-    return NextResponse.json({ error: "Link code expired" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Link code expired. Generate a new code on the website." },
+      { status: 400 },
+    );
   }
 
   const existingXuid = await prisma.minecraftAccount.findUnique({
@@ -56,8 +80,11 @@ export async function POST(request: NextRequest) {
 
   if (existingXuid && existingXuid.userId !== linkCode.userId) {
     return NextResponse.json(
-      { error: "This Minecraft account is already linked to another Discord account" },
-      { status: 400 },
+      {
+        error:
+          "This Minecraft account is already linked to another Discord account.",
+      },
+      { status: 409 },
     );
   }
 
@@ -67,7 +94,7 @@ export async function POST(request: NextRequest) {
 
   if (existingUserAccount) {
     return NextResponse.json(
-      { error: "Discord account already has a linked Minecraft account" },
+      { error: "This Discord account already has a linked Minecraft account." },
       { status: 400 },
     );
   }
@@ -100,6 +127,19 @@ export async function POST(request: NextRequest) {
     await tx.linkCode.update({
       where: { id: linkCode.id },
       data: { usedAt: new Date() },
+    });
+
+    await tx.serverEvent.create({
+      data: {
+        type: "ACCOUNT_LINKED",
+        minecraftXuid,
+        playerName: minecraftName,
+        payload: {
+          discordUserId: linkCode.user.discordId,
+          discordUsername: linkCode.user.discordUsername,
+          minecraftName,
+        },
+      },
     });
   });
 

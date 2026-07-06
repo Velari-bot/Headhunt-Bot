@@ -1,48 +1,32 @@
 import Image from "next/image";
-import Link from "next/link";
-import {
-  ArrowRight,
-  Link2,
-  Scale,
-  User,
-  Users,
-} from "lucide-react";
+import { Heart, Scale, Skull, Users } from "lucide-react";
 import { MARKET_ASSETS } from "@/components/market/mobile/icons";
 
-const UNLOCK_CARDS = [
+const FEATURE_CARDS = [
   {
-    title: "Player Profile",
-    description: "View your lives, hearts, coins, team, and survival status.",
-    icon: User,
-    accent: "border-hh-blue/25 bg-hh-blue/5 text-hh-blue",
-  },
-  {
-    title: "Minecraft Linking",
-    description:
-      "Generate a code and type /link CODE in-game to connect your Bedrock account.",
-    icon: Link2,
-    accent: "border-hh-green/25 bg-hh-green/5 text-hh-green",
-  },
-  {
-    title: "Market Access",
-    description:
-      "Buy and sell heads, extra hearts, gear, resources, and special items.",
-    icon: Scale,
+    title: "3 Lives",
+    description: "Every death matters. Lose all three and you're out.",
+    icon: Heart,
     accent: "border-hh-red/25 bg-hh-red/5 text-hh-red",
   },
   {
-    title: "Teams",
-    description: "Create or join a 3-player team and track group stats.",
-    icon: Users,
+    title: "Player Heads",
+    description: "Collect rare heads from fallen rivals.",
+    icon: Skull,
     accent: "border-hh-gold/25 bg-hh-gold/5 text-hh-gold",
   },
-] as const;
-
-const STEPS = [
-  "Connect Discord",
-  "Link Minecraft",
-  "Join Server",
-  "Unlock App",
+  {
+    title: "Market",
+    description: "Buy and sell items with in-game coins.",
+    icon: Scale,
+    accent: "border-hh-blue/25 bg-hh-blue/5 text-hh-blue",
+  },
+  {
+    title: "Teams",
+    description: "Team up with friends and share the grind.",
+    icon: Users,
+    accent: "border-hh-green/25 bg-hh-green/5 text-hh-green",
+  },
 ] as const;
 
 function DiscordIcon({ className }: { className?: string }) {
@@ -82,9 +66,6 @@ export function LandingPage() {
           <h1 className="mt-4 font-market text-lg font-bold tracking-[0.2em] text-hh-white">
             HEADHUNT SURVIVAL
           </h1>
-          <p className="mt-2 text-xs text-hh-gray">
-            3 Lives. Rare Heads. Player Market. Real Survival.
-          </p>
         </header>
 
         <div className="mt-8 rounded-2xl border border-hh-border/70 bg-hh-panel/60 p-5 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-sm sm:p-6">
@@ -92,27 +73,21 @@ export function LandingPage() {
             Connect Discord to Access HeadHunt Survival
           </h2>
           <p className="mt-3 text-center text-[11px] leading-relaxed text-hh-gray sm:text-xs">
-            Your Discord account is your main HeadHunt identity. Connect it to
-            unlock your player profile, Minecraft linking, market access, teams,
-            bounties, and stats.
+            Your Discord account is your player identity on HeadHunt Survival.
+            Connect to link your Minecraft Bedrock account and unlock the app.
           </p>
 
-          <Link
+          <a
             href="/api/login/discord"
             className="mt-5 flex w-full items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] px-4 py-3.5 text-sm font-semibold text-white shadow-[0_4px_20px_rgba(88,101,242,0.4)] transition-all hover:bg-[#4752C4] hover:brightness-105"
           >
             <DiscordIcon className="h-5 w-5" />
             Connect Discord
-          </Link>
-
-          <p className="mt-3 text-center text-[10px] leading-relaxed text-hh-gray/80">
-            You must connect Discord before linking your Minecraft Bedrock
-            account.
-          </p>
+          </a>
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-2 sm:gap-3">
-          {UNLOCK_CARDS.map((card) => {
+          {FEATURE_CARDS.map((card) => {
             const Icon = card.icon;
             return (
               <div
@@ -129,25 +104,6 @@ export function LandingPage() {
               </div>
             );
           })}
-        </div>
-
-        <div className="mt-8 rounded-xl border border-hh-border/50 bg-hh-panel/30 px-3 py-4">
-          <p className="mb-3 text-center text-[10px] font-semibold uppercase tracking-wider text-hh-gray">
-            How It Works
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-            {STEPS.map((step, i) => (
-              <div key={step} className="flex items-center gap-1.5">
-                <span className="flex h-5 w-5 items-center justify-center rounded-md border border-hh-red/30 bg-hh-red/10 text-[9px] font-bold text-hh-red">
-                  {i + 1}
-                </span>
-                <span className="text-[10px] text-hh-gray">{step}</span>
-                {i < STEPS.length - 1 && (
-                  <ArrowRight className="hidden h-3 w-3 text-hh-gray/50 sm:block" />
-                )}
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
